@@ -1388,7 +1388,7 @@ xqc_client_bind_to_interface(int fd, const char *interface_name)
 #if !defined(__APPLE__)
     printf("fd: %d. bind to nic: %s\n", fd, interface_name);
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, (char *)&ifr, sizeof(ifr)) < 0) {
-        printf("bind to nic error: %d, try use sudo\n", errno);
+        printf("bind to nic error: %d, try use sudo\n", errno);/** on linux,this operation must under `sudo` */
         return XQC_ERROR;
     }
 #endif
@@ -3444,7 +3444,7 @@ xqc_client_path_callback(int fd, short what, void *arg)
     printf("***** on_path_debug_callback\n");
     user_conn_t *user_conn = (user_conn_t *) arg;
 
-    // 判断conn状态
+    /* 判断conn状态 */
     // TODO
     if (g_test_case == 110) {
         g_test_case = -1;
@@ -5217,7 +5217,7 @@ skip_data:
     event_base_dispatch(eb);
 
     // TODO
-    // 如果支持多路径，socket由path管
+    /* 如果支持多路径，socket由path管 */
     if (0 == g_enable_multipath) {
         event_free(user_conn->ev_socket);
     }

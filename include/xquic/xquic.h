@@ -1267,6 +1267,7 @@ typedef struct xqc_conn_settings_s {
     int                         ping_on;
     /** default: xqc_cubic_cb */
     xqc_cong_ctrl_callback_t    cong_ctrl_callback; 
+    /** congestion control parameters  */
     xqc_cc_params_t             cc_params;
     /** socket option SO_SNDBUF, 0 for unlimited */
     uint32_t                    so_sndbuf;
@@ -1283,6 +1284,7 @@ typedef struct xqc_conn_settings_s {
     xqc_msec_t                  init_idle_time_out; 
     /** idle timeout interval, effective after handshake completion */
     xqc_msec_t                  idle_time_out;
+    /** enable spurious loss detection */
     int32_t                     spurious_loss_detect_on;
     /** limit of anti-amplification, default 5 */
     uint32_t                    anti_amplification_limit;
@@ -1372,7 +1374,7 @@ typedef struct xqc_conn_settings_s {
     uint8_t                     datagram_force_retrans_on;
     uint64_t                    datagram_redundant_probe;
 
-    /** enable PMTUD */
+    /** enable PMTUD (Path MTU Discovery)*/
     uint8_t                     enable_pmtud;
     /** probing interval (us), default: 500000 */
     uint64_t                    pmtud_probing_interval; 
@@ -1441,7 +1443,7 @@ typedef struct xqc_conn_settings_s {
     uint8_t                     disable_send_mmsg;
 
     /**
-     * @brief control PTO value
+     * @brief control PTO(Prob TimeOut) value
      */
     uint8_t                     control_pto_value;
 

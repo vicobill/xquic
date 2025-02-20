@@ -10,14 +10,16 @@ find_path(CUNIT_INCLUDE_DIR
 # find lib dir
 find_library(CUNIT_LIBRARY
   NAMES cunit
-  PATHS ${CUNIT_DIR}
+  HINTS ${CUNIT_DIR} ${CUNIT_DIR}/../build/CUnit
+  PATHS ${CUNIT_DIR} ${CUNIT_DIR}/../build/CUnit
   PATH_SUFFIXES lib lib64
 )
 
 if(${CUNIT_LIBRARY} MATCHES "CUNIT_LIBRARY-NOTFOUND")
   find_library(CUNIT_LIBRARY
   NAMES libcunit
-  PATHS ${CUNIT_DIR}
+  HINTS ${CUNIT_DIR} ${CUNIT_DIR}/../build/CUnit
+  PATHS ${CUNIT_DIR} ${CUNIT_DIR}/../build/CUnit
   PATH_SUFFIXES lib lib64)
 endif()
 

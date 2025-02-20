@@ -1,0 +1,6 @@
+[submodule "third_party/boringssl"]
+	path = third_party/boringssl
+	url = https://github.com/google/boringssl.git
+[submodule "third_party/cunit"]
+	path = third_party/cunit
+	url = https://gitlab.com/cunity/cunit.git

@@ -119,8 +119,8 @@ typedef struct xqc_server_ctx_s {
     socklen_t            local_addrlen;
     struct event        *ev_socket;
     struct event        *ev_engine;
-    int                  log_fd;
-    int                  keylog_fd;
+    int                  log_fd;    /** 日志文件描述符 */
+    int                  keylog_fd; /** 关键日志文件描述符 */
     xqc_quic_lb_ctx_t    quic_lb_ctx;
 } xqc_server_ctx_t;
 

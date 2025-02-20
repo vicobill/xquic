@@ -26,20 +26,10 @@ endif()
 
 
 # SSL lib type, xquic support babassl and boringssl interfaces
-if(NOT SSL_TYPE)
-    set(SSL_TYPE "babassl")
-    message(NOTICE "-- SSL_TYPE not set, use default babassl")
-endif()
+#[[ 默认使用boringssl ]]
+if (NOT SSL_TYPE)
+    set(SSL_TYPE "boringssl")
 
-if(${SSL_TYPE} MATCHES "babassl")
-    # PATH of ssl, by default XQUIC will use babassl installed in
-    # /usr/local/babassl if SSL_PATH is not set
-    if(NOT SSL_PATH)
-        set(SSL_PATH "/usr/local/babassl")
-        message(NOTICE "-- SSL_PATH not set, use default ${SSL_PATH}")
-    endif()
-
-elseif(${SSL_TYPE} MATCHES "boringssl")
     add_definitions(-DNOCRYPT=1)
     # PATH of ssl, by default XQUIC will use boringssl in third_party
     if(NOT SSL_PATH)
@@ -90,6 +80,11 @@ else()
     endforeach()
 
 endif()
+
+if(NOT CUNIT_DIR)
+    set(CUNIT_DIR ${CMAKE_SOURCE_DIR}/third_party/cunit/CUnit)
+endif()
+
 
 MESSAGE("-- SSL_TYPE: ${SSL_TYPE}")
 MESSAGE("-- SSL_PATH: ${SSL_PATH}")
