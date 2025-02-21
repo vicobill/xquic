@@ -1,36 +1,41 @@
 # Copyright (c) 2022, Alibaba Group Holding Limited
 
-cmake_minimum_required (VERSION 2.6)
-project (xquic)
+cmake_minimum_required(VERSION 3.22)
+project(xquic)
 
-set (xquic_VERSION_MAJOR 0)
-set (xquic_VERSION_MINOR 1)
-set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(xquic_VERSION_MAJOR 0)
+set(xquic_VERSION_MINOR 1)
+list(APPEND CMAKE_MODULE_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/finds"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains"
+)
 
-option (XQC_ENABLE_BBR2 "enable bbr2" OFF)
-option (XQC_ENABLE_COPA "enable copa" OFF)
-option (XQC_ENABLE_RENO "enable reno" OFF)
-option (XQC_ENABLE_UNLIMITED "enable unlimited cc" OFF)
-option (XQC_ENABLE_MP_INTEROP "enable MPQUIC interop" OFF)
-option (XQC_NO_PID_PACKET_PROCESS "do not expose path_id in xqc_engine_packet_process" OFF)
-option (XQC_PROTECT_POOL_MEM "enable write protection for pool memory (for debug)" OFF)
-option (XQC_COMPAT_DUPLICATE "qpack compat dup" OFF)
-option (XQC_ENABLE_FEC "enable fec" OFF)
-option (XQC_ENABLE_XOR "enable fec scheme xor" OFF)
-option (XQC_ENABLE_RSC "enable fec scheme reed-solomon code" OFF)
-option (XQC_ENABLE_PKM "enable fec scheme packet mask" OFF)
+option(XQC_ENABLE_BBR2 "enable bbr2" ON)
+option(XQC_ENABLE_COPA "enable copa" OFF)
+option(XQC_ENABLE_RENO "enable reno" OFF)
+option(XQC_ENABLE_UNLIMITED "enable unlimited cc" OFF)
+option(XQC_ENABLE_MP_INTEROP "enable MPQUIC interop" ON)
+option(XQC_NO_PID_PACKET_PROCESS "do not expose path_id in xqc_engine_packet_process" OFF)
+option(XQC_PROTECT_POOL_MEM "enable write protection for pool memory (for debug)" OFF)
+option(XQC_COMPAT_DUPLICATE "qpack compat dup" OFF)
+option(XQC_ENABLE_FEC "enable fec" OFF)
+option(XQC_ENABLE_XOR "enable fec scheme xor" OFF)
+option(XQC_ENABLE_RSC "enable fec scheme reed-solomon code" OFF)
+option(XQC_ENABLE_PKM "enable fec scheme packet mask" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-
 # SSL lib type, xquic support babassl and boringssl interfaces
 #[[ 默认使用boringssl ]]
-if (NOT SSL_TYPE)
+if(NOT SSL_TYPE)
     set(SSL_TYPE "boringssl")
 
     add_definitions(-DNOCRYPT=1)
+
     # PATH of ssl, by default XQUIC will use boringssl in third_party
     if(NOT SSL_PATH)
         set(SSL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/third_party/boringssl)
@@ -49,7 +54,6 @@ if(NOT SSL_DIR)
     endif()
 endif()
 
-
 # find ssl module from SSL_DIR if SSL_INC_PATH AND SSL_LIB_PATH not set.
 if(NOT SSL_INC_PATH AND NOT SSL_LIB_PATH)
     find_package(SSL)
@@ -66,6 +70,7 @@ if(NOT SSL_INC_PATH AND NOT SSL_LIB_PATH)
         message(NOTICE "-- Building with static libssl")
         set(SSL_LIB_PATH ${SSL_LIBRARIES_STATIC})
     endif()
+
     set(SSL_INC_PATH ${SSL_INCLUDE_DIR})
 
 else()
@@ -78,19 +83,16 @@ else()
             message(FATAL_ERROR "ssl lib not found ${LIB}")
         endif()
     endforeach()
-
 endif()
 
 if(NOT CUNIT_DIR)
     set(CUNIT_DIR ${CMAKE_SOURCE_DIR}/third_party/cunit/CUnit)
 endif()
 
-
 MESSAGE("-- SSL_TYPE: ${SSL_TYPE}")
 MESSAGE("-- SSL_PATH: ${SSL_PATH}")
 MESSAGE("-- SSL_LIB_PATH: ${SSL_LIB_PATH}")
 MESSAGE("-- SSL_INC_PATH: ${SSL_INC_PATH}")
-
 
 # C_FLAGS
 if(ANDROID_ABI OR PLATFORM MATCHES "mac")
@@ -99,7 +101,7 @@ if(ANDROID_ABI OR PLATFORM MATCHES "mac")
     endif()
 endif()
 
-if(NOT (CMAKE_C_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
+if(NOT(CMAKE_C_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
     set(CMAKE_C_FLAGS_OPTION "-Werror -Wno-unused -Wno-pointer-sign -Wno-format-security ")
 endif()
 
@@ -107,15 +109,13 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O2 -std=gnu11 -Wall ${CMAKE_C_FLAGS_OPTION} -DNDEBUG_PRINT -DNPRINT_MALLOC ")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g -O0 -std=gnu11 -Wall ${CMAKE_C_FLAGS_OPTION} -DNDEBUG_PRINT -DNPRINT_MALLOC -DXQC_DEBUG ")
 
-
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions(-DXQC_SYS_WINDOWS=1)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Zi")
 endif()
 
-
 # configure file
-configure_file (
+configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/xqc_configure.h.in"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/xquic/xqc_configure.h"
 )
@@ -126,7 +126,7 @@ include_directories(include
     ${CMAKE_SOURCE_DIR}
 )
 
-option (XQC_PRINT_SECRET "enable TLS secret printing" OFF)
+option(XQC_PRINT_SECRET "enable TLS secret printing" OFF)
 
 # print tls traffic secret in keylog
 if(XQC_PRINT_SECRET)
@@ -140,12 +140,12 @@ endif()
 
 # print only error log
 if(XQC_ONLY_ERROR_LOG)
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -DXQC_ONLY_ERROR_LOG ")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DXQC_ONLY_ERROR_LOG ")
 endif()
 
 # enable event log
 if(XQC_ENABLE_EVENT_LOG)
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -DXQC_ENABLE_EVENT_LOG ")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DXQC_ENABLE_EVENT_LOG ")
 endif()
 
 # sendmmsg
@@ -158,15 +158,12 @@ if(GCOV STREQUAL "on")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
 endif()
 
-
-
 # testing
 if(XQC_ENABLE_TESTING)
     add_subdirectory(tests)
     add_subdirectory(demo)
     add_subdirectory(mini)
 endif(XQC_ENABLE_TESTING)
-
 
 # http3/qpack source
 set(
@@ -235,7 +232,6 @@ if(XQC_ENABLE_MP_INTEROP)
     )
 endif()
 
-
 # fec framework
 set(
     FEC_FRAMEWORK_SOURCE
@@ -277,7 +273,7 @@ if(XQC_ENABLE_FEC)
 endif()
 
 # TLS source
-set (
+set(
     TLS_SOURCE
     "src/tls/xqc_hkdf.c"
     "src/tls/xqc_null_crypto.c"
@@ -320,7 +316,6 @@ set(
     "src/common/utils/ringmem/xqc_ring_mem.c"
     "src/common/utils/2d_hash/xqc_2d_hash_table.c"
     "src/common/utils/var_buf/xqc_var_buf.c"
-
 )
 
 # congestion control
@@ -364,9 +359,8 @@ if(XQC_ENABLE_UNLIMITED)
     )
 endif()
 
-
 # xquic source
-set (
+set(
     XQC_SOURCE
     ${XQC_SOURCE}
     ${HTTP3_SOURCES}
@@ -375,8 +369,6 @@ set (
     ${COMMON_SOURCES}
     ${CONGESTION_CONTROL_SOURCES}
 )
-
-
 
 # target
 add_library(
@@ -403,17 +395,26 @@ if(PLATFORM MATCHES "mac")
 else()
     target_link_libraries(
         xquic
-        "-ldl -Wl,--whole-archive -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/scripts/xquic.lds"
+        "-ldl -Wl,--whole-archive"
         ${SSL_LIB_PATH}
         "-Wl,--no-whole-archive"
-        -lpthread
     )
+    if(ANDROID)
+        target_link_libraries(
+            xquic
+            -lc++ 
+        )
+    else()
+        target_link_libraries(
+            xquic
+            "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/scripts/xquic.lds"
+            -lpthread
+        )
+    endif()
 endif()
-
 
 # Strip binary for release builds
 if(CMAKE_BUILD_TYPE STREQUAL MinSizeRel)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_STRIP} libxquic.so)
+        COMMAND ${CMAKE_STRIP} libxquic.so)
 endif()
-
