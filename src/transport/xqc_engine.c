@@ -1257,9 +1257,9 @@ process:
         goto after_process;
     }
 
-    // 每次只会从一个fd上接收一批数据包，所以这里是ok的
-    // 需要识别五元组信息是否和前面的path一致
-    // 1个fd，所以只会有一条new_path的frame
+    /**  每次只会从一个fd上接收一批数据包，所以这里是ok的 */
+    /**  需要识别五元组信息是否和前面的path一致 */
+    /**  1个fd，所以只会有一条new_path的frame */
     if (conn->conn_type == XQC_CONN_TYPE_SERVER
         && conn->conn_flag & XQC_CONN_FLAG_RECV_NEW_PATH)
     {

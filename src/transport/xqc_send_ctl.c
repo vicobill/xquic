@@ -815,23 +815,23 @@ xqc_send_ctl_on_ack_received(xqc_send_ctl_t *send_ctl, xqc_pn_ctl_t *pn_ctl, xqc
     xqc_list_for_each_safe(pos, next, &send_queue->sndq_unacked_packets[pns]) {
         packet_out = xqc_list_entry(pos, xqc_packet_out_t, po_list);
 
-        // 筛选出当前路径的packet
+        /**  筛选出当前路径的packet */
         if (packet_out->po_path_id != send_ctl->ctl_path->path_id) {
             continue;
         }
 
-        // 直到pn超过frame_largest_ack，结束遍历
+        /**  直到pn超过frame_largest_ack，结束遍历 */
         if (packet_out->po_pkt.pkt_num > frame_largest_ack) {
             break;
         }
 
-        // 如果pn大于pns所发的最大pn，报错
+        /**  如果pn大于pns所发的最大pn，报错 */
         if (packet_out->po_pkt.pkt_num > pn_ctl->ctl_largest_sent[pns]) {
             xqc_log(conn->log, XQC_LOG_ERROR, "|pkt is not sent yet|%ui|", packet_out->po_pkt.pkt_num);
             return -XQC_EPROTO;
         }
 
-        // range从后数，ack range递增
+        /**  range从后数，ack range递增 */
         while (packet_out->po_pkt.pkt_num > range->high && range != ack_info->ranges) {
             --range;
         }
@@ -839,7 +839,7 @@ xqc_send_ctl_on_ack_received(xqc_send_ctl_t *send_ctl, xqc_pn_ctl_t *pn_ctl, xqc
         if (packet_out->po_pkt.pkt_num >= range->low) {
             // this packet is acked
 
-            // 修改标志位
+            /**  修改标志位 */
             if (has_acked == 0) {
                 /* 初始化 */
                 send_ctl->ctl_prior_delivered = send_ctl->ctl_delivered;
@@ -850,8 +850,8 @@ xqc_send_ctl_on_ack_received(xqc_send_ctl_t *send_ctl, xqc_pn_ctl_t *pn_ctl, xqc
 
             path_largest_pkt_num = packet_out->po_pkt.pkt_num;
 
-            // 更新ctl_largest_acked
-            // 若ack info里此路径最大pn大于path largest acked，更新 largest acked
+            /**  更新ctl_largest_acked */
+            /**  若ack info里此路径最大pn大于path largest acked，更新 largest acked */
             if (packet_out->po_pkt.pkt_num > send_ctl->ctl_largest_acked[pns] ||
                 send_ctl->ctl_largest_acked[pns] == XQC_MAX_UINT64_VALUE)
 			{
@@ -860,7 +860,7 @@ xqc_send_ctl_on_ack_received(xqc_send_ctl_t *send_ctl, xqc_pn_ctl_t *pn_ctl, xqc
                 send_ctl->ctl_largest_acked_sent_time[pns] = packet_out->po_sent_time;
             }
 
-            // 更新 largest_ack_both
+            /**  更新 largest_ack_both */
             if (packet_out->po_largest_ack > pn_ctl->ctl_largest_acked_ack[pns]) {
                 pn_ctl->ctl_largest_acked_ack[pns] = packet_out->po_largest_ack;
                 need_del_record = 1;
@@ -876,7 +876,7 @@ xqc_send_ctl_on_ack_received(xqc_send_ctl_t *send_ctl, xqc_pn_ctl_t *pn_ctl, xqc
                 xqc_conn_state_2_str(conn->conn_state),
                 frame_largest_ack, send_ctl->ctl_largest_acked[pns]);
 
-            // 更新sample
+            /**  更新sample */
             xqc_update_sample(&send_ctl->sampler, packet_out, send_ctl, ack_recv_time);
 
             /* Packet previously declared lost gets acked */
@@ -930,7 +930,7 @@ xqc_send_ctl_on_ack_received(xqc_send_ctl_t *send_ctl, xqc_pn_ctl_t *pn_ctl, xqc
     /* DetectAndRemoveLostPackets + OnPacketsLost */
     xqc_send_ctl_detect_lost(send_ctl, send_queue, pns, ack_recv_time);
 
-    // 更新recv record
+    /**  更新recv record */
     if (need_del_record) {
         xqc_recv_record_del(&pn_ctl->ctl_recv_record[pns], pn_ctl->ctl_largest_acked_ack[pns] + 1);
         xqc_log(conn->log, XQC_LOG_DEBUG, "|xqc_recv_record_del from %ui|pns:%d|",

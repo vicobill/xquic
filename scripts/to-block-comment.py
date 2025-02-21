@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+用于将 // 注释风格，改成 /** */ 注释风格
+在VS中，单行风格的中文注释通常会因为编码原因解析出错
+"""
 
 import os
 import chardet
@@ -38,7 +42,7 @@ def process_dir(dir):
                 continue
             
             fullpath = os.path.join(root,file)
-            print(f"处理文件:{fullpath}")
+            
             has_changed = False
             # gbk_to_utf8(fullpath,fullpath)
             wlines = []
@@ -46,8 +50,8 @@ def process_dir(dir):
                 with open(fullpath,encoding='utf-8') as f:
                     for line in f.readlines():
                         if line.find("//") >= 0 and has_chinese(line):
-                            line = line.replace("//","/* ")
-                            line = line.rstrip() + "*/\n"
+                            line = line.replace("//","/** ")
+                            line = line.rstrip() + " */\n"
                             wlines.append(line)
                             has_changed = True
                         else:
@@ -59,6 +63,7 @@ def process_dir(dir):
                 continue
             
             if has_changed:
+                print(f"处理文件:{fullpath}")
                 with open(fullpath,'w',encoding='utf-8') as f:
                     f.writelines(wlines)
                 

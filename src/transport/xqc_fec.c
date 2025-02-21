@@ -1279,7 +1279,7 @@ xqc_get_symbols_buff(unsigned char **output, xqc_fec_ctl_t *fec_ctl, uint64_t bl
     fec_recv_rpr_syb_list = &fec_ctl->fec_recv_rpr_syb_list;
     *size = 0;
 
-    // check 一下当前block idx能否成功被flush
+    /**  check 一下当前block idx能否成功被flush */
 
     xqc_list_for_each_safe(pos, next, fec_recv_src_syb_list) {
         xqc_fec_src_syb_t *src_syb = xqc_list_entry(pos, xqc_fec_src_syb_t, fec_list);
