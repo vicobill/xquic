@@ -182,7 +182,7 @@ xqc_h3_request_encode_rtts(xqc_h3_request_t *h3r, char *buff, size_t buff_size)
 {
     xqc_h3_stream_t *h3_stream = h3r->h3_stream;
     size_t cursor = 0;
-    int ret, i;
+    int ret;
 
     for (int i = 0; i < XQC_MAX_PATHS_COUNT; ++i) {
         if ((h3_stream->paths_info[i].path_send_bytes > 0)
@@ -199,7 +199,7 @@ xqc_h3_request_encode_rtts(xqc_h3_request_t *h3r, char *buff, size_t buff_size)
     }
 
     cursor = xqc_min(cursor, buff_size);
-    for (i = cursor - 1; i >= 0; i--) {
+    for (int i = cursor - 1; i >= 0; i--) {
         if (buff[i] == '-') {
             buff[i] = '\0';
             break;
@@ -215,7 +215,7 @@ xqc_stream_info_print(xqc_h3_stream_t *h3_stream, xqc_request_stats_t *stats)
     char *buff = stats->stream_info;
     size_t buff_size = XQC_STREAM_INFO_LEN;
     size_t cursor = 0, ret = 0;
-    int i;
+
     int flag = 0;
     char mp_settings[XQC_MP_SETTINGS_STR_LEN] = {0};
     xqc_usec_t hsk_time;
@@ -269,7 +269,7 @@ xqc_stream_info_print(xqc_h3_stream_t *h3_stream, xqc_request_stats_t *stats)
 
 full:
     cursor = xqc_min(cursor, buff_size);
-    for (i = cursor - 1; i >= 0; i--) {
+    for (int i = cursor - 1; i >= 0; i--) {
         if (buff[i] == '-' || buff[i] == '#') {
             buff[i] = '\0';
             break;
@@ -380,7 +380,6 @@ xqc_int_t
 xqc_h3_request_make_name_lowercase(xqc_http_header_t *dst, xqc_http_header_t *src,
     xqc_var_buf_t *buf)
 {
-    xqc_int_t       ret;
     xqc_bool_t      use_original_buf    = XQC_TRUE; /* whether use memory from original header */
 
     for (size_t i = 0; i < src->name.iov_len; i++) {
@@ -923,7 +922,7 @@ xqc_h3_priority_init(xqc_h3_priority_t *prio)
     prio->fec = XQC_DEFAULT_SIZE_REQ;
 }
 
-size_t
+ssize_t
 xqc_write_http_priority(xqc_h3_priority_t *prio,
     uint8_t *dst, size_t dstcap)
 {

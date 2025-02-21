@@ -118,7 +118,7 @@ xqc_put_uint16be(uint8_t *p, uint16_t n)
 */
 int xqc_vint_read(const unsigned char *p, const unsigned char *end, uint64_t *valp);
 
-static inline size_t xqc_get_varint_len(const uint8_t *p) { return 1u << (*p >> 6); }
+static inline size_t xqc_get_varint_len(const uint8_t *p) { return 1ull << (*p >> 6); }
 static inline int64_t xqc_get_varint_fb(const uint8_t *p) { return *p & 0x3f; }
 
 size_t xqc_put_varint_len(uint64_t n);

@@ -85,9 +85,6 @@ typedef enum {
     /* do no cryption on 0-RTT and 1-RTT packets */
     XQC_TRANSPORT_PARAM_NO_CRYPTO                           = 0x1000,
 
-    /* multipath quic attributes */
-    XQC_TRANSPORT_PARAM_INIT_MAX_PATH_ID_V10                = 0x0f739bbc1b666d09,
-
     /* google connection options */
     XQC_TRANSPORT_PARAM_GOOGLE_CO                           = 0x3128,
 #ifdef XQC_ENABLE_FEC
@@ -101,6 +98,8 @@ typedef enum {
     /* upper limit of params defined by xquic */
     XQC_TRANSPORT_PARAM_UNKNOWN,
 } xqc_transport_param_id_t;
+/* multipath quic attributes */
+#define XQC_TRANSPORT_PARAM_INIT_MAX_PATH_ID_V10 0x0f739bbc1b666d09 
 
 
 typedef struct {

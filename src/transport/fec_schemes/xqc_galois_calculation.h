@@ -53,7 +53,7 @@ static const unsigned char xqc_rs_log_table[256] = {
     116, 214, 244, 234, 168, 80, 88, 175
 };
 
-static const unsigned char xqc_rs_exp_table[510] = {
+static const int8_t xqc_rs_exp_table[510] = {
     1, 2, 4, 8, 16, 32, 64, -128,
     29, 58, 116, -24, -51, -121, 19, 38,
     76, -104, 45, 90, -76, 117, -22, -55,

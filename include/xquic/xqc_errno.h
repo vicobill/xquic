@@ -33,8 +33,9 @@ typedef enum {
  * @brief Multipath error codes
  */
 //typedef enum {
-#define    TRA_MP_PROTOCOL_VIOLATION       = 0x1001d76d3ded42f3
+#define    TRA_MP_PROTOCOL_VIOLATION        0x1001d76d3ded42f3
 //} xqc_mp_err_code_t;
+typedef int64_t xqc_mp_err_code_t;
 
 
 #define TRA_CRYPTO_ERROR_BASE   0x100

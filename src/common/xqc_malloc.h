@@ -91,7 +91,7 @@ static inline void
 xqc_free_wrap_default(void *opaque, void *ptr)
 {
     (void)opaque;
-    return xqc_free(ptr);
+    xqc_free(ptr);
 }
 
 static xqc_allocator_t xqc_default_allocator = {

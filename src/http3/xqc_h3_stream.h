@@ -172,7 +172,7 @@ xqc_int_t xqc_h3_stream_close(xqc_h3_stream_t *h3s);
 
 void xqc_h3_stream_destroy(xqc_h3_stream_t *h3s);
 
-xqc_int_t xqc_h3_stream_send_buffer(xqc_h3_stream_t *h3s);
+ssize_t xqc_h3_stream_send_buffer(xqc_h3_stream_t *h3s);
 
 xqc_int_t xqc_h3_stream_send_uni_stream_hdr(xqc_h3_stream_t *h3s);
 

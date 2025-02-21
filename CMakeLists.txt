@@ -94,6 +94,13 @@ MESSAGE("-- SSL_PATH: ${SSL_PATH}")
 MESSAGE("-- SSL_LIB_PATH: ${SSL_LIB_PATH}")
 MESSAGE("-- SSL_INC_PATH: ${SSL_INC_PATH}")
 
+if(SSL_TYPE STREQUAL "boringssl")
+    if(WIN32)
+        add_compile_definitions(NOCRYPT=1)
+        add_compile_options("/W4 /wd4819 /wd4996")
+    endif()
+endif()
+
 # C_FLAGS
 if(ANDROID_ABI OR PLATFORM MATCHES "mac")
     if(PLATFORM STREQUAL "mac32")
@@ -399,10 +406,11 @@ else()
         ${SSL_LIB_PATH}
         "-Wl,--no-whole-archive"
     )
+
     if(ANDROID)
         target_link_libraries(
             xquic
-            -lc++ 
+            -lc++
         )
     else()
         target_link_libraries(
