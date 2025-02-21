@@ -5,3 +5,4 @@ bss/
 cmake-build-debug/
 cmake-build~/
 build~/
+build-*/
