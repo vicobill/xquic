@@ -631,9 +631,11 @@ xqc_engine_send_reset(xqc_engine_t *engine, xqc_cid_t *dcid,
     }
 
     stateless_cb = engine->transport_cbs.stateless_reset;
+    xqc_byte_buffer_t buffer;buffer.buf = buf;buffer.size = size;
+    xqc_netadr_t peer_netadr;peer_netadr.addr = peer_addr;peer_netadr.len = peer_addrlen;
+    xqc_netadr_t local_netadr;local_netadr.addr = local_addr;local_netadr.len = local_addrlen;
     if (stateless_cb) {
-        size = (xqc_int_t)stateless_cb(buf, (size_t)size, peer_addr, peer_addrlen,
-                                       local_addr, local_addrlen, user_data);
+        size = (xqc_int_t)stateless_cb(&buffer,&peer_netadr,&local_netadr,user_data);
         if (size < 0) {
             return size;
         }

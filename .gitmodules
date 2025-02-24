@@ -4,3 +4,6 @@
 [submodule "third_party/cunit"]
 	path = third_party/cunit
 	url = https://gitlab.com/cunity/cunit.git
+[submodule "third_party/libuv"]
+	path = third_party/libuv
+	url = https://github.com/libuv/libuv.git

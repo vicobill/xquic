@@ -84,6 +84,17 @@ typedef enum xqc_proto_version_s {
  */
 typedef xqc_usec_t (*xqc_timestamp_pt)(void);
 
+typedef struct xqc_byte_buffer_s{
+    xqc_byte_t * buf;
+    size_t size;
+}xqc_byte_buffer_t;
+
+typedef struct xqc_netadr_s{
+    struct sockaddr* addr;
+    socklen_t len;
+}xqc_netadr_t;
+
+
 /**
  * @brief event timer callback function. MUST be set for both client and server
  * xquic don't have implementation of timer, but will tell the interval of timer by this function.
@@ -192,10 +203,8 @@ typedef void (*xqc_server_refuse_pt)(xqc_engine_t *engine, xqc_connection_t *con
  * @param user_data user_data related to connection, originated from the user_data parameter of
  * xqc_engine_packet_process
  */
-typedef ssize_t (*xqc_stateless_reset_pt)(const unsigned char *buf, size_t size,
-    const struct sockaddr *peer_addr, socklen_t peer_addrlen,
-    const struct sockaddr *local_addr, socklen_t local_addrlen,
-    void *user_data);
+typedef ssize_t (*xqc_stateless_reset_pt)(const xqc_byte_buffer_t* buffer,
+    const xqc_netadr_t* peer_adr,const xqc_netadr_t* local_adr,void *user_data);
 
 /**
  * @brief connection closing notify callback function.
@@ -236,7 +245,7 @@ typedef int (*xqc_conn_notify_pt)(xqc_connection_t *conn, const xqc_cid_t *cid,
  * NOTICE: as client initiate multiple connections to multiple QUIC servers or server clusters,
  * it shall save the tokens separately, e.g. save the token with the domain as the key
  */
-typedef void (*xqc_save_token_pt)(const unsigned char *token, uint32_t token_len,
+typedef void (*xqc_save_token_pt)(const xqc_byte_buffer_t* token_buffer,
     void *conn_user_data);
 
 /**
@@ -338,6 +347,7 @@ typedef void (*xqc_path_peer_addr_changed_nofity_pt)(xqc_connection_t *conn, uin
 #define XQC_SOCKET_ERROR                -1
 #define XQC_SOCKET_EAGAIN               -2
 
+
 /**
  * @brief writing data callback function
  *
@@ -351,8 +361,8 @@ typedef void (*xqc_path_peer_addr_changed_nofity_pt)(xqc_connection_t *conn, uin
  * XQC_SOCKET_EAGAIN for EAGAIN, application could continue sending data with xqc_conn_continue_send
  * function when socket write event is ready
  */
-typedef ssize_t (*xqc_socket_write_pt)(const unsigned char *buf, size_t size,
-    const struct sockaddr *peer_addr, socklen_t peer_addrlen, void *conn_user_data);
+typedef ssize_t (*xqc_socket_write_pt)(const xqc_byte_buffer_t* buf,
+    const xqc_netadr_t* netadr, void *conn_user_data);
 
 /**
  * @brief sendmmsg callback function. the implementation of this shall send data with sendmmsg
@@ -370,7 +380,7 @@ typedef ssize_t (*xqc_socket_write_pt)(const unsigned char *buf, size_t size,
  * reset packet, as xquic can't find a connection
  */
 typedef ssize_t (*xqc_send_mmsg_pt)(const struct iovec *msg_iov, unsigned int vlen,
-    const struct sockaddr *peer_addr, socklen_t peer_addrlen, void *conn_user_data);
+    const xqc_netadr_t* netadr, void *conn_user_data);
 
 
 /**
@@ -384,9 +394,8 @@ typedef ssize_t (*xqc_send_mmsg_pt)(const struct iovec *msg_iov, unsigned int vl
  * @param peer_addrlen peer address length
  * @param cb_user_data user_data of xqc_conn_pkt_filter_callback_pt
  */
-typedef ssize_t (*xqc_conn_pkt_filter_callback_pt)(const unsigned char *buf,
-    size_t size, const struct sockaddr *peer_addr, socklen_t peer_addrlen,
-    void *cb_user_data);
+typedef ssize_t (*xqc_conn_pkt_filter_callback_pt)(const xqc_byte_buffer_t* buf,
+    const xqc_netadr_t *peer_addr,void *cb_user_data);
 
 
 /**
@@ -453,8 +462,8 @@ typedef enum {
  * Warning: server's user_data is what passed in xqc_engine_packet_process when send a reset packet
  */
 typedef ssize_t (*xqc_socket_write_ex_pt)(uint64_t path_id,
-    const unsigned char *buf, size_t size,
-    const struct sockaddr *peer_addr, socklen_t peer_addrlen,
+    const xqc_byte_buffer_t* buf,
+    const xqc_netadr_t *peer_addr,
     void *conn_user_data);
 
 /**
@@ -474,7 +483,7 @@ typedef ssize_t (*xqc_socket_write_ex_pt)(uint64_t path_id,
  */
 typedef ssize_t (*xqc_send_mmsg_ex_pt)(uint64_t path_id,
     const struct iovec *msg_iov, unsigned int vlen,
-    const struct sockaddr *peer_addr, socklen_t peer_addrlen,
+    const xqc_netadr_t* peer_addr,
     void *conn_user_data);
 
 
@@ -512,7 +521,7 @@ typedef void (*xqc_stream_closing_notify_pt)(xqc_stream_t *stream,
  * @param dgram_recv_ts the unix timestamp when the datagram is received from socket
  */
 typedef void (*xqc_datagram_read_notify_pt)(xqc_connection_t *conn,
-    void *user_data, const void *data, size_t data_len, uint64_t unix_ts);
+    void *user_data, const xqc_byte_buffer_t *data, uint64_t unix_ts);
 
 /**
  * @brief the callback API to notify application that datagrams can be sent
@@ -1641,9 +1650,9 @@ xqc_int_t xqc_engine_set_priv_ctx(xqc_engine_t *engine, void *priv_ctx);
  */
 XQC_EXPORT_PUBLIC_API
 xqc_int_t xqc_engine_packet_process(xqc_engine_t *engine,
-    const unsigned char *packet_in_buf, size_t packet_in_size,
-    const struct sockaddr *local_addr, socklen_t local_addrlen,
-    const struct sockaddr *peer_addr, socklen_t peer_addrlen,
+    const xqc_byte_buffer_t* packet_in,
+    const xqc_netadr_t *local_addr,
+    const xqc_netadr_t *peer_addr,
     xqc_usec_t recv_time, void *user_data);
 
 
@@ -1742,10 +1751,10 @@ xqc_connection_t *xqc_engine_get_conn_by_scid(xqc_engine_t *engine,
 XQC_EXPORT_PUBLIC_API
 const xqc_cid_t *xqc_connect(xqc_engine_t *engine,
     const xqc_conn_settings_t *conn_settings,
-    const unsigned char *token, unsigned token_len,
+    const xqc_byte_buffer_t* token,
     const char *server_host, int no_crypto_flag,
     const xqc_conn_ssl_config_t *conn_ssl_config,
-    const struct sockaddr *peer_addr, socklen_t peer_addrlen,
+    const xqc_netadr_t *peer_addr,
     const char *alpn, void *user_data);
 
 /**
@@ -1803,7 +1812,7 @@ void xqc_conn_set_alp_user_data(xqc_connection_t *conn, void *proto_data);
  * @return XQC_OK for success, others for failure
  */
 XQC_EXPORT_PUBLIC_API
-xqc_int_t xqc_conn_get_peer_addr(xqc_connection_t *conn, struct sockaddr *addr, socklen_t addr_cap,
+xqc_int_t xqc_conn_get_peer_addr(xqc_connection_t *conn, xqc_netadr_t *addr,
     socklen_t *peer_addr_len);
 
 /**
@@ -1812,7 +1821,7 @@ xqc_int_t xqc_conn_get_peer_addr(xqc_connection_t *conn, struct sockaddr *addr, 
  * @return XQC_OK for success, others for failure
  */
 XQC_EXPORT_PUBLIC_API
-xqc_int_t xqc_conn_get_local_addr(xqc_connection_t *conn, struct sockaddr *addr, socklen_t addr_cap,
+xqc_int_t xqc_conn_get_local_addr(xqc_connection_t *conn, xqc_netadr_t *addr,
     socklen_t *local_addr_len);
 
 /**
@@ -2131,8 +2140,7 @@ xqc_conn_type_t xqc_conn_get_type(xqc_connection_t *conn);
  * @return XQC_OK for success, others for failure
  */
 XQC_EXPORT_PUBLIC_API
-xqc_int_t xqc_path_get_peer_addr(xqc_connection_t *conn, uint64_t path_id,
-    struct sockaddr *addr, socklen_t addr_cap, socklen_t *peer_addr_len);
+xqc_int_t xqc_path_get_peer_addr(xqc_connection_t *conn, uint64_t path_id, xqc_netadr_t* addr,socklen_t *peer_addr_len);
 
 /**
  * Server should get local addr when path_create_notify callbacks
@@ -2140,8 +2148,7 @@ xqc_int_t xqc_path_get_peer_addr(xqc_connection_t *conn, uint64_t path_id,
  * @return XQC_OK for success, others for failure
  */
 XQC_EXPORT_PUBLIC_API
-xqc_int_t xqc_path_get_local_addr(xqc_connection_t *conn, uint64_t path_id,
-    struct sockaddr *addr, socklen_t addr_cap, socklen_t *local_addr_len);
+xqc_int_t xqc_path_get_local_addr(xqc_connection_t *conn, uint64_t path_id,xqc_netadr_t *addr, socklen_t *local_addr_len);
 
     
 

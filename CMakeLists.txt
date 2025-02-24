@@ -97,7 +97,7 @@ MESSAGE("-- SSL_INC_PATH: ${SSL_INC_PATH}")
 if(SSL_TYPE STREQUAL "boringssl")
     if(WIN32)
         add_compile_definitions(NOCRYPT=1)
-        add_compile_options("/W4 /wd4819 /wd4996")
+        add_compile_options("/W4;/wd4819;/wd4996")
     endif()
 endif()
 
