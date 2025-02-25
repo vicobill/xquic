@@ -3,7 +3,7 @@
  */
 
 #define _GNU_SOURCE
-
+#include "XquicWrapper.h"
 #include <xquic/xquic.h>
 #include <xquic/xquic_typedef.h>
 #include <xquic/xqc_http3.h>
@@ -20,6 +20,7 @@
 #include "common.h"
 #include "xqc_hq.h"
 #include "../tests/platform.h"
+
 
 #ifdef XQC_SYS_WINDOWS
 #pragma comment(lib,"ws2_32.lib")
@@ -1704,14 +1705,14 @@ xqc_demo_cli_init_conneciton_settings(xqc_conn_settings_t* settings,
 
 /* set client args to default values */
 void
-xqc_demo_cli_init_args(xqc_demo_cli_client_args_t *args)
+xqc_demo_cli_init_args(xqc_demo_cli_client_args_t *args,const char* server_addr,int port)
 {
     memset(args, 0, sizeof(xqc_demo_cli_client_args_t));
 
     /* net cfg */
     args->net_cfg.conn_timeout = 30;
-    strncpy(args->net_cfg.server_addr, "127.0.0.1", sizeof(args->net_cfg.server_addr));
-    args->net_cfg.server_port = 8443;
+    strncpy(args->net_cfg.server_addr, server_addr, sizeof(args->net_cfg.server_addr));
+    args->net_cfg.server_port = port;
 
     /* env cfg */
     args->env_cfg.log_level = XQC_LOG_DEBUG;
@@ -2182,7 +2183,7 @@ xqc_demo_cli_format_h3_req(xqc_http_header_t *headers, size_t sz, xqc_demo_cli_r
     xqc_http_header_t req_hdr[] = {
         {
             .name = {.iov_base = ":method", .iov_len = 7},
-            .value = {.iov_base = method_s[req->method], .iov_len = strlen(method_s[req->method])},
+            .value = {.iov_base = (void*)method_s[req->method], .iov_len = strlen(method_s[req->method])},
             .flags = 0,
         },
         {
@@ -3035,34 +3036,46 @@ xqc_demo_cli_free_ctx(xqc_demo_cli_ctx_t *ctx)
     free(ctx);
 }
 
+static xqc_demo_cli_ctx_t* ctx;
 
+void XQUIC_Connect(const char *host, int port)
+{
+ /* init env if necessary */
+ xqc_platform_init_env();
+    
+ /* get input client args */
+ xqc_demo_cli_client_args_t *args = calloc(1, sizeof(xqc_demo_cli_client_args_t));
+ xqc_demo_cli_init_args(args,host,port);
+//  xqc_demo_cli_parse_args(argc, argv, args);
 
+ /* init client ctx */
+ ctx = calloc(1, sizeof(xqc_demo_cli_ctx_t));
+ xqc_demo_cli_init_ctx(ctx, args);
+
+ /* engine event */
+ ctx->eb = event_base_new();
+ ctx->ev_engine = event_new(ctx->eb, -1, 0, xqc_demo_cli_engine_callback, ctx);
+ xqc_demo_cli_init_xquic_engine(ctx, args);
+
+ /* start task scheduler */
+ xqc_demo_cli_start_task_manager(ctx);
+
+ event_base_dispatch(ctx->eb);
+}
+
+void XQUIC_Disconnect()
+{
+    xqc_engine_destroy(ctx->engine);
+    xqc_demo_cli_free_ctx(ctx);
+}
+
+#if DEMO_CLIENT
 int
 main(int argc, char *argv[])
 {
-    /* init env if necessary */
-    xqc_platform_init_env();
-    
-    /* get input client args */
-    xqc_demo_cli_client_args_t *args = calloc(1, sizeof(xqc_demo_cli_client_args_t));
-    xqc_demo_cli_init_args(args);
-    xqc_demo_cli_parse_args(argc, argv, args);
-
-    /* init client ctx */
-    xqc_demo_cli_ctx_t *ctx = calloc(1, sizeof(xqc_demo_cli_ctx_t));
-    xqc_demo_cli_init_ctx(ctx, args);
-
-    /* engine event */
-    ctx->eb = event_base_new();
-    ctx->ev_engine = event_new(ctx->eb, -1, 0, xqc_demo_cli_engine_callback, ctx);
-    xqc_demo_cli_init_xquic_engine(ctx, args);
-
-    /* start task scheduler */
-    xqc_demo_cli_start_task_manager(ctx);
-
-    event_base_dispatch(ctx->eb);
-
-    xqc_engine_destroy(ctx->engine);
-    xqc_demo_cli_free_ctx(ctx);
+   
+    XQUIC_Connect();
+    XQUIC_Disconnect();
     return 0;
 }
+#endif

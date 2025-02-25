@@ -2,6 +2,7 @@
  * @copyright Copyright (c) 2022, Alibaba Group Holding Limited
  */
 
+#include "XquicWrapper.h"
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <errno.h>
@@ -1093,7 +1094,7 @@ finish_recv:
 
 
 static void
-xqc_demo_svr_socket_event_callback(int fd, short what, void *arg)
+xqc_demo_svr_socket_event_callback(evutil_socket_t fd, short what, void *arg)
 {
     //DEBUG;
     xqc_demo_svr_ctx_t *ctx = (xqc_demo_svr_ctx_t *)arg;
@@ -1199,7 +1200,7 @@ xqc_demo_svr_create_socket(xqc_demo_svr_ctx_t *ctx, xqc_demo_svr_net_config_t* c
 
 
 static void
-xqc_demo_svr_engine_callback(int fd, short what, void *arg)
+xqc_demo_svr_engine_callback(evutil_socket_t fd, short what, void *arg)
 {
     xqc_demo_svr_ctx_t *ctx = (xqc_demo_svr_ctx_t *) arg;
 
@@ -1250,13 +1251,13 @@ xqc_demo_svr_init_0rtt(xqc_demo_svr_args_t *args)
 
 
 void
-xqc_demo_svr_init_args(xqc_demo_svr_args_t *args)
+xqc_demo_svr_init_args(xqc_demo_svr_args_t *args,int port)
 {
     memset(args, 0, sizeof(xqc_demo_svr_args_t));
 
     /* net cfg */
-    strncpy(args->net_cfg.ip, DEFAULT_IP, sizeof(args->net_cfg.ip) - 1);
-    args->net_cfg.port = DEFAULT_PORT;
+    strncpy(args->net_cfg.ip, "0.0.0.0", sizeof(args->net_cfg.ip) - 1);
+    args->net_cfg.port = port;
 
     /* quic cfg */
     xqc_demo_svr_init_0rtt(args);
@@ -1678,54 +1679,68 @@ th3_demo_proxy_sig_hndlr(int signo)
     }
 }
 
+static xqc_demo_svr_ctx_t* ctx;
+int XQUIC_Listen(int port)
+{
+ /* init env if necessary */
+ xqc_platform_init_env();
 
+ signal(SIGTERM, th3_demo_proxy_sig_hndlr);
+
+ /* get input server args */
+ xqc_demo_svr_args_t *args = calloc(1, sizeof(xqc_demo_svr_args_t));
+ xqc_demo_svr_init_args(args,port);
+//  xqc_demo_svr_parse_args(argc, argv, args);
+
+ /* init server ctx */
+ ctx = &svr_ctx;
+ xqc_demo_svr_init_ctx(ctx, args);
+
+ /* engine event */
+ struct event_base *eb = event_base_new();
+ ctx->ev_engine = event_new(eb, -1, 0, xqc_demo_svr_engine_callback, ctx);
+ ctx->eb = eb;
+
+ if (xqc_demo_svr_init_xquic_engine(ctx, args) < 0) {
+     return -1;
+ }
+
+ /* init socket */
+ int ret = xqc_demo_svr_create_socket(ctx, &args->net_cfg);
+ if (ret < 0) {
+     printf("xqc_create_socket error\n");
+     return 0;
+ }
+
+ /* socket event */
+ ctx->ev_socket = event_new(eb, ctx->fd, EV_READ | EV_PERSIST,
+     xqc_demo_svr_socket_event_callback, ctx);
+ event_add(ctx->ev_socket, NULL);
+
+ /* socket event */
+ ctx->ev_socket6 = event_new(eb, ctx->fd6, EV_READ | EV_PERSIST,
+     xqc_demo_svr_socket_event_callback, ctx);
+ event_add(ctx->ev_socket6, NULL);
+
+ event_base_dispatch(eb);
+ return 0;
+}
+
+void XQUIC_Unlisten()
+{
+    xqc_engine_destroy(ctx->engine);
+    xqc_demo_svr_free_ctx(ctx);
+}
+
+#if DEMO_SERVER
 int
 main(int argc, char *argv[])
 {
-    /* init env if necessary */
-    xqc_platform_init_env();
-
-    signal(SIGTERM, th3_demo_proxy_sig_hndlr);
-
-    /* get input server args */
-    xqc_demo_svr_args_t *args = calloc(1, sizeof(xqc_demo_svr_args_t));
-    xqc_demo_svr_init_args(args);
-    xqc_demo_svr_parse_args(argc, argv, args);
-
-    /* init server ctx */
-    xqc_demo_svr_ctx_t *ctx = &svr_ctx;
-    xqc_demo_svr_init_ctx(ctx, args);
-
-    /* engine event */
-    struct event_base *eb = event_base_new();
-    ctx->ev_engine = event_new(eb, -1, 0, xqc_demo_svr_engine_callback, ctx);
-    ctx->eb = eb;
-
-    if (xqc_demo_svr_init_xquic_engine(ctx, args) < 0) {
-        return -1;
-    }
-
-    /* init socket */
-    int ret = xqc_demo_svr_create_socket(ctx, &args->net_cfg);
-    if (ret < 0) {
-        printf("xqc_create_socket error\n");
-        return 0;
-    }
-
-    /* socket event */
-    ctx->ev_socket = event_new(eb, ctx->fd, EV_READ | EV_PERSIST,
-        xqc_demo_svr_socket_event_callback, ctx);
-    event_add(ctx->ev_socket, NULL);
-
-    /* socket event */
-    ctx->ev_socket6 = event_new(eb, ctx->fd6, EV_READ | EV_PERSIST,
-        xqc_demo_svr_socket_event_callback, ctx);
-    event_add(ctx->ev_socket6, NULL);
-
-    event_base_dispatch(eb);
+   
 
     xqc_engine_destroy(ctx->engine);
     // xqc_demo_svr_free_ctx(ctx);
 
     return 0;
 }
+#endif
