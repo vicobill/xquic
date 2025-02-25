@@ -1444,28 +1444,28 @@ xqc_conn_set_alp_user_data(xqc_connection_t *conn, void *user_data)
 }
 
 xqc_int_t
-xqc_conn_get_peer_addr(xqc_connection_t *conn, xqc_netadr_t* netadr,
+xqc_conn_get_peer_addr(xqc_connection_t *conn, struct sockaddr *addr, socklen_t addr_cap,
     socklen_t *peer_addr_len)
 {
-    if (conn->peer_addrlen > netadr->len) {
+    if (conn->peer_addrlen > addr_cap) {
         return -XQC_ENOBUF;
     }
 
     *peer_addr_len = conn->peer_addrlen;
-    xqc_memcpy(netadr->addr, conn->peer_addr, conn->peer_addrlen);
+    xqc_memcpy(addr, conn->peer_addr, conn->peer_addrlen);
     return XQC_OK;
 }
 
 xqc_int_t
-xqc_conn_get_local_addr(xqc_connection_t *conn, xqc_netadr_t* netadr,
+xqc_conn_get_local_addr(xqc_connection_t *conn, struct sockaddr *addr, socklen_t addr_cap,
     socklen_t *local_addr_len)
 {
-    if (conn->local_addrlen > netadr->len) {
+    if (conn->local_addrlen > addr_cap) {
         return -XQC_ENOBUF;
     }
 
     *local_addr_len = conn->local_addrlen;
-    xqc_memcpy(netadr->addr, conn->local_addr, conn->local_addrlen);
+    xqc_memcpy(addr, conn->local_addr, conn->local_addrlen);
     return XQC_OK;
 }
 
@@ -1665,21 +1665,14 @@ xqc_send_burst(xqc_connection_t *conn, xqc_path_ctx_t *path, struct iovec *iov, 
 {
     ssize_t sent_size = 0;
     int sent_cnt = 0;
-
-    xqc_byte_buffer_t buffer;
-    xqc_netadr_t peer_netadr;
     
     if (conn->pkt_filter_cb) {
 
-        peer_netadr.addr = conn->peer_addr;
-        peer_netadr.len = conn->peer_addrlen;
-        
-        buffer.buf = &(iov[sent_cnt].iov_base);
-        buffer.size = iov[sent_cnt].iov_len;
-
         for (sent_cnt = 0; sent_cnt < cnt; sent_cnt++) {
-            sent_size = conn->pkt_filter_cb(&buffer,
-                                       &peer_netadr,
+            sent_size = conn->pkt_filter_cb(iov[sent_cnt].iov_base,
+                                       iov[sent_cnt].iov_len, 
+                                       (struct sockaddr *)conn->peer_addr,
+                                       conn->peer_addrlen, 
                                        conn->pkt_filter_cb_user_data);
             if (sent_size < 0) {
                 xqc_log(conn->log, XQC_LOG_ERROR,  
@@ -1701,10 +1694,9 @@ xqc_send_burst(xqc_connection_t *conn, xqc_path_ctx_t *path, struct iovec *iov, 
         }
 
     } else if (conn->transport_cbs.write_mmsg_ex) {
-        peer_netadr.addr = path->peer_addr;
-        peer_netadr.len = path->peer_addrlen;
         sent_cnt = conn->transport_cbs.write_mmsg_ex(path->path_id, iov, cnt,
-                                                &peer_netadr,
+                                                (struct sockaddr *)path->peer_addr,
+                                                path->peer_addrlen,
                                                 xqc_conn_get_user_data(conn));
 
         if (sent_cnt < 0) {
@@ -1722,9 +1714,9 @@ xqc_send_burst(xqc_connection_t *conn, xqc_path_ctx_t *path, struct iovec *iov, 
         }
 
     } else {
-        peer_netadr.addr = conn->peer_addr;
-        peer_netadr.len = conn->peer_addrlen;
-        sent_cnt = conn->transport_cbs.write_mmsg(iov, cnt,&peer_netadr,
+        sent_cnt = conn->transport_cbs.write_mmsg(iov, cnt,
+                                              (struct sockaddr *)conn->peer_addr,
+                                              conn->peer_addrlen,
                                               xqc_conn_get_user_data(conn));
         if (sent_cnt < 0) {
             xqc_log(conn->log, XQC_LOG_ERROR, "|error send mmsg|");
@@ -2276,13 +2268,10 @@ ssize_t
 xqc_send(xqc_connection_t *conn, xqc_path_ctx_t *path, unsigned char *data, unsigned int len)
 {
     ssize_t sent;
-    xqc_byte_buffer_t buf;
-    xqc_netadr_t peer_netadr;
-    buf.buf = data;buf.size = len;
-    peer_netadr.addr = conn->peer_addr;peer_netadr.len = conn->peer_addrlen;
+
     if (conn->pkt_filter_cb) {
-        
-        sent = conn->pkt_filter_cb(&buf, &peer_netadr, conn->pkt_filter_cb_user_data);
+        sent = conn->pkt_filter_cb(data, len, (struct sockaddr *)conn->peer_addr,
+                                   conn->peer_addrlen, conn->pkt_filter_cb_user_data);
         if (sent < 0) {
             xqc_log(conn->log, XQC_LOG_ERROR,  "|pkt_filter_cb error|conn:%p|"
                     "size:%ud|sent:%z|", conn, len, sent);
@@ -2292,7 +2281,9 @@ xqc_send(xqc_connection_t *conn, xqc_path_ctx_t *path, unsigned char *data, unsi
         sent = len;
 
     } else if (conn->transport_cbs.write_socket_ex) {
-        sent = conn->transport_cbs.write_socket_ex(path->path_id, &buf,&peer_netadr,
+        sent = conn->transport_cbs.write_socket_ex(path->path_id, data, len,
+                                                   (struct sockaddr *)path->peer_addr,
+                                                   path->peer_addrlen,
                                                    xqc_conn_get_user_data(conn));
         if (sent != len) {
             xqc_log(conn->log, XQC_LOG_ERROR,
@@ -2315,7 +2306,9 @@ xqc_send(xqc_connection_t *conn, xqc_path_ctx_t *path, unsigned char *data, unsi
         }
 
     } else {
-        sent = conn->transport_cbs.write_socket(&buf, &peer_netadr,
+        sent = conn->transport_cbs.write_socket(data, len,
+                                                (struct sockaddr *)conn->peer_addr,
+                                                conn->peer_addrlen,
                                                 xqc_conn_get_user_data(conn));
         if (sent != len) {
             xqc_log(conn->log, XQC_LOG_ERROR, 
@@ -3040,10 +3033,9 @@ xqc_conn_send_retry(xqc_connection_t *conn, unsigned char *token, unsigned token
         return size;
     }
 
-    xqc_byte_buffer_t buffer;buffer.buf = buf;buffer.size = size;
-    xqc_netadr_t peer_netadr;peer_netadr.addr = conn->peer_addr;peer_netadr.len = conn->peer_addrlen;
-    size = (xqc_int_t)conn->transport_cbs.write_socket(&buffer, &peer_netadr,
-                                                        xqc_conn_get_user_data(conn));
+    size = (xqc_int_t)conn->transport_cbs.write_socket(
+        buf, (size_t)size, (struct sockaddr*)conn->peer_addr, conn->peer_addrlen,
+        xqc_conn_get_user_data(conn));
     if (size < 0) {
         return size;
     }
@@ -6161,9 +6153,9 @@ xqc_conn_send_path_challenge(xqc_connection_t *conn, xqc_path_ctx_t *path)
     now = xqc_monotonic_timestamp();
     packet_out->po_sent_time = now;
 
-    xqc_netadr_t netadr; netadr.addr = path->rebinding_addr; netadr.len = path->rebinding_addrlen;
-    xqc_byte_buffer_t buffer;buffer.buf = conn->enc_pkt; buffer.size = conn->enc_pkt_len;
-    sent = conn->transport_cbs.write_socket_ex(path->path_id, &buffer, &netadr,
+    sent = conn->transport_cbs.write_socket_ex(path->path_id, conn->enc_pkt, conn->enc_pkt_len,
+                                                       (struct sockaddr *)path->rebinding_addr,
+                                                       path->rebinding_addrlen,
                                                        xqc_conn_get_user_data(conn));
 
     if (sent != conn->enc_pkt_len) {
