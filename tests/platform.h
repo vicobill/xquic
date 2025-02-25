@@ -12,8 +12,15 @@
 #endif
 
 #ifdef XQC_SYS_WINDOWS
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#ifndef EAGAIN
 # define EAGAIN  WSAEWOULDBLOCK
+#endif
+#ifndef EINTR
 # define EINTR WSAEINTR
+#endif
+
 #endif
 
 

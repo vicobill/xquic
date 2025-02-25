@@ -38,6 +38,9 @@ def get_build_dir(os,abi="arm64-v8a"):
 def get_boringssl_dir():
     return f"{R}/third_party/boringssl"
 
+def get_libevent_dir():
+    return f"{R}/third_party/libevent"
+
 def get_ssl_path_str(os="win",buildtype="Debug",abi="arm64-v8a")->str:
     d = get_boringssl_dir()
     builddir = get_build_dir(os,abi)

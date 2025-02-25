@@ -106,7 +106,6 @@ typedef int32_t         xqc_int_t;
 typedef uint32_t        xqc_uint_t;
 typedef intptr_t        xqc_flag_t;
 typedef uint8_t         xqc_bool_t;
-typedef uint8_t         xqc_byte_t;
 
 /* values of xqc_bool_t */
 #define XQC_TRUE        1
@@ -122,7 +121,6 @@ typedef uint8_t         xqc_byte_t;
 /** length of stateless reset token */
 #define XQC_STATELESS_RESET_TOKENLEN    16
 
- 
 /**
  * @brief cid structure for xquic connection identification
  */

@@ -44,63 +44,63 @@ typedef enum {
 /**
  * @brief definition of transport parameter types
  */
-typedef enum {
-    XQC_TRANSPORT_PARAM_ORIGINAL_DEST_CONNECTION_ID         = 0x0000,
-    XQC_TRANSPORT_PARAM_MAX_IDLE_TIMEOUT                    = 0x0001,
-    XQC_TRANSPORT_PARAM_STATELESS_RESET_TOKEN               = 0x0002,
-    XQC_TRANSPORT_PARAM_MAX_UDP_PAYLOAD_SIZE                = 0x0003,
-    XQC_TRANSPORT_PARAM_INITIAL_MAX_DATA                    = 0x0004,
-    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAM_DATA_BIDI_LOCAL  = 0x0005,
-    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAM_DATA_BIDI_REMOTE = 0x0006,
-    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAM_DATA_UNI         = 0x0007,
-    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAMS_BIDI            = 0x0008,
-    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAMS_UNI             = 0x0009,
-    XQC_TRANSPORT_PARAM_ACK_DELAY_EXPONENT                  = 0x000a,
-    XQC_TRANSPORT_PARAM_MAX_ACK_DELAY                       = 0x000b,
-    XQC_TRANSPORT_PARAM_DISABLE_ACTIVE_MIGRATION            = 0x000c,
-    XQC_TRANSPORT_PARAM_PREFERRED_ADDRESS                   = 0x000d,
-    XQC_TRANSPORT_PARAM_ACTIVE_CONNECTION_ID_LIMIT          = 0x000e,
-    XQC_TRANSPORT_PARAM_INITIAL_SOURCE_CONNECTION_ID        = 0x000f,
-    XQC_TRANSPORT_PARAM_RETRY_SOURCE_CONNECTION_ID          = 0x0010,
+// typedef enum {
+#define    XQC_TRANSPORT_PARAM_ORIGINAL_DEST_CONNECTION_ID          0x0000
+#define    XQC_TRANSPORT_PARAM_MAX_IDLE_TIMEOUT                     0x0001
+#define    XQC_TRANSPORT_PARAM_STATELESS_RESET_TOKEN                0x0002
+#define    XQC_TRANSPORT_PARAM_MAX_UDP_PAYLOAD_SIZE                 0x0003
+#define    XQC_TRANSPORT_PARAM_INITIAL_MAX_DATA                     0x0004
+#define    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAM_DATA_BIDI_LOCAL   0x0005
+#define    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAM_DATA_BIDI_REMOTE  0x0006
+#define    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAM_DATA_UNI          0x0007
+#define    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAMS_BIDI             0x0008
+#define    XQC_TRANSPORT_PARAM_INITIAL_MAX_STREAMS_UNI              0x0009
+#define    XQC_TRANSPORT_PARAM_ACK_DELAY_EXPONENT                   0x000a
+#define    XQC_TRANSPORT_PARAM_MAX_ACK_DELAY                        0x000b
+#define    XQC_TRANSPORT_PARAM_DISABLE_ACTIVE_MIGRATION             0x000c
+#define    XQC_TRANSPORT_PARAM_PREFERRED_ADDRESS                    0x000d
+#define    XQC_TRANSPORT_PARAM_ACTIVE_CONNECTION_ID_LIMIT           0x000e
+#define    XQC_TRANSPORT_PARAM_INITIAL_SOURCE_CONNECTION_ID         0x000f
+#define    XQC_TRANSPORT_PARAM_RETRY_SOURCE_CONNECTION_ID           0x0010
 
-    XQC_TRANSPORT_PARAM_ENABLE_MULTIPATH_PARSER             = 0x0011,
-    XQC_TRANSPORT_PARAM_MAX_DATAGRAM_FRAME_SIZE_PARSER      = 0x0012,
+#define    XQC_TRANSPORT_PARAM_ENABLE_MULTIPATH_PARSER              0x0011
+#define    XQC_TRANSPORT_PARAM_MAX_DATAGRAM_FRAME_SIZE_PARSER       0x0012
     
     /* whether enable datagram reduncy */
-    XQC_TRANSPORT_PARAM_CLOSE_DGRAM_REDUNDANCY             = 0x0013,
+#define    XQC_TRANSPORT_PARAM_CLOSE_DGRAM_REDUNDANCY              0x0013
 #ifdef XQC_ENABLE_FEC
     /* fec attributes' parser */
-    XQC_TRANSPORT_PARAM_FEC_VERSION_PARSER                  = 0x0014,
-    XQC_TRANSPORT_PARAM_FEC_ENCODER_SCHEMES_PARSER          = 0x0015,
-    XQC_TRANSPORT_PARAM_FEC_DECODER_SCHEMES_PARSER          = 0x0016,
-    XQC_TRANSPORT_PARAM_FEC_MAX_SYMBOL_NUM_PARSER           = 0x0017,
+#define   XQC_TRANSPORT_PARAM_FEC_VERSION_PARSER                  0x0014
+#define   XQC_TRANSPORT_PARAM_FEC_ENCODER_SCHEMES_PARSER          0x0015
+#define   XQC_TRANSPORT_PARAM_FEC_DECODER_SCHEMES_PARSER          0x0016
+#define   XQC_TRANSPORT_PARAM_FEC_MAX_SYMBOL_NUM_PARSER           0x0017
 #endif
     /* upper limit of params defined in [Transport] */
-    XQC_TRANSPORT_PARAM_PROTOCOL_MAX,
+#define  XQC_TRANSPORT_PARAM_PROTOCOL_MAX  0x0018
 
 
     /* max datagram frame size */
-    XQC_TRANSPORT_PARAM_MAX_DATAGRAM_FRAME_SIZE             = 0x0020,
+#define    XQC_TRANSPORT_PARAM_MAX_DATAGRAM_FRAME_SIZE             0x0020
 
     /* do no cryption on 0-RTT and 1-RTT packets */
-    XQC_TRANSPORT_PARAM_NO_CRYPTO                           = 0x1000,
+#define    XQC_TRANSPORT_PARAM_NO_CRYPTO                            0x1000
 
     /* google connection options */
-    XQC_TRANSPORT_PARAM_GOOGLE_CO                           = 0x3128,
+#define    XQC_TRANSPORT_PARAM_GOOGLE_CO                            0x3128
 #ifdef XQC_ENABLE_FEC
     /* fec attributes */
-    XQC_TRANSPORT_PARAM_FEC_VERSION                         = 0xfec001,
-    XQC_TRANSPORT_PARAM_FEC_VERSION_02                      = 0xfec002,
-    XQC_TRANSPORT_PARAM_FEC_ENCODER_SCHEMES                 = 0xfece01,
-    XQC_TRANSPORT_PARAM_FEC_DECODER_SCHEMES                 = 0xfecd02,
-    XQC_TRANSPORT_PARAM_FEC_MAX_SYMBOL_NUM                  = 0xfecb02,
+ #define   XQC_TRANSPORT_PARAM_FEC_VERSION                          0xfec001
+ #define   XQC_TRANSPORT_PARAM_FEC_VERSION_02                       0xfec002
+ #define   XQC_TRANSPORT_PARAM_FEC_ENCODER_SCHEMES                  0xfece01
+ #define   XQC_TRANSPORT_PARAM_FEC_DECODER_SCHEMES                  0xfecd02
+ #define   XQC_TRANSPORT_PARAM_FEC_MAX_SYMBOL_NUM                   0xfecb02
 #endif
     /* upper limit of params defined by xquic */
-    XQC_TRANSPORT_PARAM_UNKNOWN,
-} xqc_transport_param_id_t;
+ #define   XQC_TRANSPORT_PARAM_UNKNOWN 0xfecb03
+//} xqc_transport_param_id_t;
 /* multipath quic attributes */
 #define XQC_TRANSPORT_PARAM_INIT_MAX_PATH_ID_V10 0x0f739bbc1b666d09 
-
+typedef int64_t  xqc_transport_param_id_t;
 
 typedef struct {
     uint8_t                 ipv4[4];

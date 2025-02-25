@@ -1405,11 +1405,7 @@ xqc_process_new_token_frame(xqc_connection_t *conn, xqc_packet_in_t *packet_in)
         return ret;
     }
 
-    xqc_byte_buffer_t token;
-    token.buf = conn->conn_token;
-    token.size = conn->conn_token_len;
-
-    conn->transport_cbs.save_token(&token,
+    conn->transport_cbs.save_token(conn->conn_token, conn->conn_token_len,
                                    xqc_conn_get_user_data(conn));
 
     return XQC_OK;
@@ -1449,10 +1445,7 @@ xqc_process_datagram_frame(xqc_connection_t *conn, xqc_packet_in_t *packet_in)
         if (conn->app_proto_cbs.dgram_cbs.datagram_read_notify
             && (conn->conn_flag & XQC_CONN_FLAG_UPPER_CONN_EXIST))
         {
-            xqc_byte_buffer_t buffer;
-            buffer.buf = data_buffer;
-            buffer.size = data_len;
-            conn->app_proto_cbs.dgram_cbs.datagram_read_notify(conn, conn->dgram_data,&buffer, xqc_monotonic_timestamp() - packet_in->pkt_recv_time);
+            conn->app_proto_cbs.dgram_cbs.datagram_read_notify(conn, conn->dgram_data, data_buffer, data_len, xqc_monotonic_timestamp() - packet_in->pkt_recv_time);
             xqc_log(conn->log, XQC_LOG_DEBUG, "|xqc_datagram_read|data_len:%z|", data_len);
         }
     }

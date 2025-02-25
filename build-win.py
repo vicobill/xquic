@@ -50,6 +50,18 @@ def build_boringssl(builddir,buildtype='Release'):
     bu.run_build(cmake,builddir,bu.build_config_release())
     os.chdir(bu.R)
     
+def build_libevent(builddir,buildtype = 'Release'):
+    cmake = get_cmake_exe()
+    cmd = f"{cmake} -DCMAKE_BUILD_TYPE={buildtype} -DEVENT__DISABLE_TESTS=ON \
+-DEVENT__DISABLE_SAMPLES=ON -DEVENT__DISABLE_BENCHMARK=ON\
+-DEVENT__LIBRARY_TYPE=STATIC -G \"Visual Studio 17 2022\" -A x64 -B {builddir}"
+    
+    os.chdir(bu.get_libevent_dir())
+    subprocess.run(cmd)
+    bu.run_build(cmake,builddir,bu.build_config_debug())
+    bu.run_build(cmake,builddir,bu.build_config_release())
+    os.chdir(bu.R)
+    
     
 def build_xquic(builddir,buildtype='Release'):
     cmake = get_cmake_exe()
@@ -66,6 +78,7 @@ def build_xquic(builddir,buildtype='Release'):
 if __name__=="__main__":
     builddir = bu.get_build_dir('win')
     build_boringssl(builddir)
+    build_libevent(builddir)
     build_xquic(builddir)
 
 

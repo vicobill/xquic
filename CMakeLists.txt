@@ -20,9 +20,9 @@ option(XQC_ENABLE_MP_INTEROP "enable MPQUIC interop" ON)
 option(XQC_NO_PID_PACKET_PROCESS "do not expose path_id in xqc_engine_packet_process" OFF)
 option(XQC_PROTECT_POOL_MEM "enable write protection for pool memory (for debug)" OFF)
 option(XQC_COMPAT_DUPLICATE "qpack compat dup" OFF)
-option(XQC_ENABLE_FEC "enable fec" OFF)
+option(XQC_ENABLE_FEC "enable fec" ON)
 option(XQC_ENABLE_XOR "enable fec scheme xor" OFF)
-option(XQC_ENABLE_RSC "enable fec scheme reed-solomon code" OFF)
+option(XQC_ENABLE_RSC "enable fec scheme reed-solomon code" ON)
 option(XQC_ENABLE_PKM "enable fec scheme packet mask" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -165,11 +165,27 @@ if(GCOV STREQUAL "on")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
 endif()
 
+if(NOT MSVC)
+add_compile_options("-fPIC")
+endif()
+
+
 # testing
 if(XQC_ENABLE_TESTING)
     add_subdirectory(tests)
     add_subdirectory(demo)
     add_subdirectory(mini)
+else()
+    ## ------------- libevent ----------------
+    set(EVENT__DISABLE_TESTS ON)
+    set(EVENT__DISABLE_SAMPLES ON)
+    set(EVENT__DISABLE_BENCHMARK ON)
+    set(EVENT__LIBRARY_TYPE "STATIC")
+    set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/third_party/boringssl")
+    set(OPENSSL_LIBRARIES "${CMAKE_SOURCE_DIR}/third_party/boringssl/")
+    add_subdirectory(third_party/libevent)
+    ## 导出接口
+    add_subdirectory(demo)
 endif(XQC_ENABLE_TESTING)
 
 # http3/qpack source
