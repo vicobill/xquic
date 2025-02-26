@@ -371,8 +371,13 @@ if (NOT XQC_NO_SHARED)
     target_link_libraries(
         xquic 
         ${DYMAMIC_LINK_OPTION}
-        -pthread
     )
+    if (NOT CMAKE_SYSTEM_NAME MATCHES "Android|OS390|QNX")
+        target_link_libraries(
+            xquic 
+            -pthread
+        )
+    endif()
 endif()
 
 if (XQC_ENABLE_TESTING)

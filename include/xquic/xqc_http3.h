@@ -790,7 +790,7 @@ XQC_EXPORT_PUBLIC_API
 void xqc_h3_priority_init(xqc_h3_priority_t *prio);
 
 XQC_EXPORT_PUBLIC_API
-size_t xqc_write_http_priority(xqc_h3_priority_t *prio,
+ssize_t xqc_write_http_priority(xqc_h3_priority_t *prio,
     uint8_t *dst, size_t dstcap);
 
 XQC_EXPORT_PUBLIC_API

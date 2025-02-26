@@ -50,38 +50,41 @@ include_directories(
     "${CMAKE_SOURCE_DIR}/"
     "${CMAKE_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/third_party/libevent/include"
+    "${CMAKE_SOURCE_DIR}/tests"
     ${CMAKE_SOURCE_DIR}
     # ${CUNIT_INCLUDE_DIRS}
     ${LIBEVENT_INCLUDE_DIRS}
 )
-
 
 # link libraries
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(APP_DEPEND_LIBS
         xquic-static
         ${SSL_LIB_PATH}
-        ${LIBEVENT_LIBRARY}
+        ${LIBEVENT_LIBRARIES}
         -lm
         CACHE STRING "xquic app depend libs")
 else()
     set(APP_DEPEND_LIBS
         xquic-static
         ${SSL_LIB_PATH}
-        ${LIBEVENT_LIBRARY}
+        ${LIBEVENT_LIBRARIES}
         m
         dl
         stdc++
-        pthread
         CACHE STRING "xquic app depend libs")
+    if (NOT CMAKE_SYSTEM_NAME MATCHES "Android|OS390|QNX")
+        list(APPEND APP_DEPEND_LIBS pthread)
+    endif()
 endif()
 
 
 # add_executable(demo_server ${DEMO_SERVER_SOURCES})
-# add_executable(demo_client ${DEMO_CLIENT_SOURCES})
+add_executable(demo_client ${DEMO_CLIENT_SOURCES})
 
 add_library(XquicWrapper SHARED ${DEMO_SERVER_SOURCES} ${DEMO_CLIENT_SOURCES})
 target_link_libraries(XquicWrapper ${APP_DEPEND_LIBS} event)
+target_compile_definitions(XquicWrapper PRIVATE "NOT_XQUIC_WRAPPER=1")
 
 # target_link_libraries(demo_server ${APP_DEPEND_LIBS})
-# target_link_libraries(demo_client ${APP_DEPEND_LIBS})
+target_link_libraries(demo_client ${APP_DEPEND_LIBS} event)

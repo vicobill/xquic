@@ -8,10 +8,11 @@ if(HAVE_CUNIT)
 endif()
 
 # find LibEvent include and library path
-find_package(LibEvent 2.0.21)
-if(NOT LIBEVENT_FOUND)
-    message(FATAL_ERROR "libevent with required version not found")
-endif()
+# find_package(LibEvent 2.0.21)
+# if(NOT LIBEVENT_FOUND)
+#     message(FATAL_ERROR "libevent with required version not found")
+# endif()
+
 
 include_directories(
     "${CMAKE_SOURCE_DIR}/"
@@ -72,8 +73,10 @@ else()
         m
         dl
         stdc++
-        pthread
         CACHE STRING "xquic app depend libs")
+    if (NOT CMAKE_SYSTEM_NAME MATCHES "Android|OS390|QNX")
+        list(APPEND APP_DEPEND_LIBS pthread)
+    endif()
 endif()
 
 target_link_libraries(test_server ${APP_DEPEND_LIBS})
@@ -154,8 +157,10 @@ if(HAVE_CUNIT)
             m
             stdc++
             dl
-            pthread
             CACHE STRING "xquic unit test depend libs")
+        if (NOT CMAKE_SYSTEM_NAME MATCHES "Android|OS390|QNX")
+            list(APPEND CUTEST_DEPEND_LIBS pthread)
+        endif()
     endif()
     
     target_link_libraries(run_tests

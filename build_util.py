@@ -41,6 +41,9 @@ def get_boringssl_dir():
 def get_libevent_dir():
     return f"{R}/third_party/libevent"
 
+def get_libcunit_dir():
+    return f"{R}/third_party/cunit"
+
 def get_ssl_path_str(os="win",buildtype="Debug",abi="arm64-v8a")->str:
     d = get_boringssl_dir()
     builddir = get_build_dir(os,abi)
@@ -55,16 +58,18 @@ def xquic_cmake_cmd(enableEventLog=False,os='android',buildtype="Release",abi="x
     cmd =  f" -DGCOV=on -DXQC_SUPPORT_SENDMMSG_BUILD=1 \
 -DXQC_ENABLE_BBR2=1 -DXQC_ENABLE_RENO=1 -DXQC_ENABLE_COPA=1 \
 -DSSL_TYPE={SSL_TYPE_STR} -DSSL_PATH={SSL_PATH_STR} -DSSL_INC_PATH={SSL_INC_PATH_STR} -DSSL_LIB_PATH={get_ssl_path_str(os,buildtype,abi)} \
--DXQC_COMPAT_DUPLICATE=1  \
+-DXQC_COMPAT_DUPLICATE=1 \
 -DXQC_ENABLE_FEC=1 -DXQC_ENABLE_XOR=1 -DXQC_ENABLE_RSC=1 -DXQC_ENABLE_PKM=1 "
     if enableEventLog:
         cmd = f"{cmd} -DXQC_ENABLE_EVENT_LOG=1"
+    if not os == 'android':
+        cmd = f"{cmd} -DXQC_ENABLE_TESTING=ON "
     return cmd
         
 def cmake_clang_cxx_flags():
     return "\
--DCMAKE_C_FLAGS=\"-fPIC -fno-exceptions -fno-rtti \" \
--DCMAKE_CXX_FLAGS=\"-fPIC -fno-exceptions -fno-rtti \" \
+-DCMAKE_C_FLAGS=\"-fPIC -fno-exceptions -fno-rtti -fPIC \" \
+-DCMAKE_CXX_FLAGS=\"-fPIC -fno-exceptions -fno-rtti -fPIC \" \
         "
         
 def chdir_and_clean_buildir(targetdir,builddir):
@@ -75,3 +80,10 @@ def chdir_and_clean_buildir(targetdir,builddir):
 def run_build(cmake,builddir,config="Release"):
     buildcmd = f"{cmake} --build {builddir} --config {config}"
     subprocess.run(buildcmd)
+    
+def get_libevent_cmake_flags(os,buildtype,abi):
+    return f" -DEVENT__DISABLE_TESTS=ON \
+-DEVENT__DISABLE_SAMPLES=ON -DEVENT__DISABLE_BENCHMARK=ON\
+-DEVENT__LIBRARY_TYPE=\"STATIC\" \
+-DOPENSSL_CRYPTO_LIBRARY={get_ssl_path_str(os,buildtype,abi)} \
+-DOPENSSL_INCLUDE_DIR={get_boringssl_dir()}/include/"

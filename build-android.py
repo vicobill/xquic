@@ -11,9 +11,9 @@ SDK 目录由系统环境变量 ANDROID_SDK / ANDROID_SDK_HOME / ANDROID_SDK_ROO
 
 import os
 import subprocess
+import sys
 
 import build_util as bu
-R = bu.R
 
 
 ANDROID_ARCHS = ["arm64-v8a","armeabi-v7a","x86_64"]
@@ -64,10 +64,27 @@ def build_boringssl(builddir,abi):
 {bu.cmake_clang_cxx_flags()} \
 -DCMAKE_BUILD_TYPE=Release -G \"Ninja\" -B {builddir}"
     
-    bu.chdir_and_clean_buildir(f"{R}/third_party/boringssl",builddir)
+    os.chdir(bu.get_boringssl_dir())
+    # bu.chdir_and_clean_buildir(f"{R}/third_party/boringssl",builddir)
     subprocess.run(cmd)
     bu.run_build(cmake,builddir)
-    os.chdir(R)
+    os.chdir(bu.R)
+
+def build_libevent(builddir,abi):
+    tc = get_android_toolchain_cmake()
+    ndk = get_android_ndk_home()
+    cmake = get_cmake_exe()
+    cmd = f"{cmake} -DCMAKE_TOOLCHAIN_FILE={tc} -DANDROID_ABI={abi} \
+-DANDROID_PLATFORM=android-21 -DANDROID_NDK={ndk} \
+-DBUILD_SHARED_LIBS=0 {bu.get_libevent_cmake_flags('android','Release',abi)}\
+{bu.cmake_clang_cxx_flags()} -DCMAKE_SYSTEM_NAME=Android \
+-DCMAKE_BUILD_TYPE=Release -G \"Ninja\" -B {builddir}"
+    
+    os.chdir(bu.get_libevent_dir())
+    # bu.chdir_and_clean_buildir(f"{R}/third_party/libevent",builddir)
+    subprocess.run(cmd)
+    bu.run_build(cmake,builddir)
+    os.chdir(bu.R)
     
 def build_xquic(builddir,abi):
     tc = get_android_toolchain_cmake()
@@ -88,9 +105,14 @@ def build_xquic(builddir,abi):
 
     bu.run_build(cmake,builddir)
     
+def get_build_dir(abi):return f"build-android-{abi}"
+    
 if __name__ == "__main__":
+
     for abi in ANDROID_ARCHS:
-        builddir = bu.get_build_dir('android',bu.build_config_release())
-        build_xquic(f"build-android-{abi}",abi)
+        builddir = bu.get_build_dir('android',abi)
+        build_boringssl(builddir,abi)
+        build_libevent(builddir,abi)
+        build_xquic(builddir,abi)
 
 

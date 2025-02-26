@@ -9,7 +9,7 @@ extern "C" {
 #endif
 // 客户端连接服务器
 XQC_EXPORT_PUBLIC_API 
-void XQUIC_Connect(const char* host, int port);
+int XQUIC_Connect(int argc, char* argv[]);
 XQC_EXPORT_PUBLIC_API
 void XQUIC_Disconnect();
 
